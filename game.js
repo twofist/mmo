@@ -110,13 +110,70 @@
 	
 	//done creating other players
 	
-	//add battleui
-	
-	//done creating the battle ui
-	
 	initcamera(camera, player, scene);
 	
 	let battlecontainer = [];
+	
+	
+	
+	
+	
+	
+	const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
+    const username = window.location.search.split("=")[1] || prompt("Please enter your name", "");
+    if (window.location.search.split("=")[1] !== username) {
+        window.location.replace("?user=" + username);
+    }
+	
+    const MSG_USERNAME = 0;
+    const MSG_CONNECTED = 1;
+    const MSG_DISCONNECTED = 2;
+    const MSG_ONLINE_USERS = 3;
+    const ENEMY_DATA = 4;
+	const PLAYER_DATA = 5;
+	
+	socket.addEventListener('open', function(event) {
+        socket.send(MSG_USERNAME + ":" + username);
+    });
+    socket.addEventListener('close', function(event) {
+        console.log("disconnected...");
+    });
+    socket.addEventListener('error', function(event) {
+        console.log("an error has occured!");
+    });
+	
+	socket.addEventListener('message', function(event) {
+        const data = event.data;
+        const type = parseInt(data[0]);
+        const msg = data.split(":")[1];
+        switch (type) {
+            case MSG_CONNECTED:
+                if (username === msg) return;
+                console.log("User connected:", msg);
+                adduser(msg);
+                break;
+            case MSG_DISCONNECTED:
+                console.log("User disconnected:", msg);
+                removeuser(msg);
+                break;
+            case MSG_ONLINE_USERS:
+                console.log("Online users:", msg);
+                let users = msg.split(",");
+                users.map((name) => {
+                    adduser(name);
+                });
+                break;
+            default:
+                console.log("Unknown message:", data);
+                break;
+        };
+    });
+	
+	
+	
+	
+	
+	
 	
 	scene.registerBeforeRender(function() {
 		
@@ -342,7 +399,7 @@
 	obj.bodyparts.push(obj.leftarm);
 	
 	obj.rightarm.pos = [1, -0.3, 0];
-	obj.bodyparts.push(obj.rightarm);
+	obj.bodyparts.push(obj.rightarm);	
   }
   
   //give parts a position and colour
