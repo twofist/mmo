@@ -125,13 +125,15 @@
         window.location.replace("?user=" + username);
     }
 	
-    const MSG_USERNAME = 0;
-    const MSG_CONNECTED = 1;
-    const MSG_DISCONNECTED = 2;
-    const MSG_ONLINE_USERS = 3;
-    const ENEMY_DATA = 4;
-	const PLAYER_DATA = 5;
+    const USERNAME = 0;
+    const CONNECTED = 1;
+    const DISCONNECTED = 2;
+    const ONLINE_USERS = 3;
+	const ONLINE_ENEMIES = 4;
+    const UPDATE_ENEMY_DATA = 5;
+	const UPDATE_PLAYER_DATA = 6;
 	
+	//send server the username on connect
 	socket.addEventListener('open', function(event) {
         socket.send(MSG_USERNAME + ":" + username);
     });
@@ -142,27 +144,38 @@
         console.log("an error has occured!");
     });
 	
+	//listen for enemy/player changes
 	socket.addEventListener('message', function(event) {
         const data = event.data;
         const type = parseInt(data[0]);
         const msg = data.split(":")[1];
         switch (type) {
-            case MSG_CONNECTED:
+            case CONNECTED:
                 if (username === msg) return;
                 console.log("User connected:", msg);
                 adduser(msg);
                 break;
-            case MSG_DISCONNECTED:
+            case DISCONNECTED:
                 console.log("User disconnected:", msg);
                 removeuser(msg);
                 break;
-            case MSG_ONLINE_USERS:
+            case ONLINE_USERS:
                 console.log("Online users:", msg);
                 let users = msg.split(",");
                 users.map((name) => {
                     adduser(name);
                 });
                 break;
+			case ONLINE_ENEMIES:
+				console.log("Online Enemies:", msg)
+				let enemies = msg.split(",");
+				enemies.map((name) => {
+					addenemy(name);
+				});
+				break;
+			case UPDATE_ENEMY_DATA:
+				break;
+			case UPDATE_PLAYER_DATA:
             default:
                 console.log("Unknown message:", data);
                 break;
