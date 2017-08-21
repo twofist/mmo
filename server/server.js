@@ -7,8 +7,9 @@ const USERNAME = 0;
 const CONNECTED = 1;
 const DISCONNECTED = 2;
 const ONLINE_USERS = 3;
-const ENEMY_DATA = 4;
-const PLAYER_DATA = 5;
+const ONLINE_ENEMIES = 4;
+const UPDATE_ENEMY_DATA = 5;
+const UPDATE_PLAYER_DATA = 6;
 
 let uid = 0;
 let eid = 0;
@@ -26,6 +27,9 @@ class User {
 		this.gear = {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0};
 		this.tx = 0;
 		this.tz = 0;
+		this.x = 0;
+		this.z = 0;
+		this.y = 5;
 		this.inventory = [];
 		this.state = 0;
         if (!this.socket) {
@@ -46,11 +50,12 @@ class User {
 class Enemy {
 	constructor(obj){
 		this.id = eid++;
+		this.username = "slime";
 		this.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
 		this.gear = {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0};
 		this.x = Math.random();
 		this.z = Math.random();
-		this.y = 1;
+		this.y = 5;
 		this.state = 0;
 		this.tx = Math.floor(Math.random() * 101)-50;
 		this.tz = Math.floor(Math.random() * 101)-50;
@@ -77,6 +82,15 @@ let getOnlineUsers = () => {
         if (index < users.length - 1) str += ",";
     });
     return (str);
+};
+
+let getOnlineEnemies = () =>{
+	let str = "";
+	enemies.map((enemy, index) => {
+		str += enemy.username;
+		if(index < enemies.length -1) str += ",";
+	});
+	return (str);
 };
 
 //send message to given user
@@ -111,6 +125,7 @@ wss.on('connection', function connection(ws, req) {
                 console.log(user.ip + ":" + data, "connected!");
                 broadcastMessage(CONNECTED, data);
                 user.send(ONLINE_USERS + ":" + getOnlineUsers());
+				user.send(ONLINE_ENEMIES +":" + getOnlineEnemies());
             }
 		//on received message do...
         switch (type) {
