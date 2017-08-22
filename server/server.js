@@ -68,7 +68,7 @@ let enemies = [];
 //removes the users from the array
 let deleteUserFromUsers = (user) => {
     users.map((us, index) => {
-        if (us.username === user.username || us.id === user.id) {
+        if (us === user || us === user) {
             users.splice(index, 1);
         }
     });
@@ -78,8 +78,8 @@ let deleteUserFromUsers = (user) => {
 let getOnlineUsers = () => {
     let str = "";
     users.map((user, index) => {
-        str += user.username;
-        if (index < users.length - 1) str += ",";
+        str += JSON.stringify(user);
+        if (index < users.length - 1) str += ",!,";
     });
     return (str);
 };
@@ -87,8 +87,8 @@ let getOnlineUsers = () => {
 let getOnlineEnemies = () =>{
 	let str = "";
 	enemies.map((enemy, index) => {
-		str += enemy.username;
-		if(index < enemies.length -1) str += ",";
+		str += JSON.stringify(enemy);
+		if(index < enemies.length -1) str += ",!,";
 	});
 	return (str);
 };
@@ -123,7 +123,7 @@ wss.on('connection', function connection(ws, req) {
             if (type === USERNAME) {
                 user.username = data;
                 console.log(user.ip + ":" + data, "connected!");
-                broadcastMessage(CONNECTED, data);
+                broadcastMessage(CONNECTED, JSON.stringify(user));
                 user.send(ONLINE_USERS + ":" + getOnlineUsers());
 				user.send(ONLINE_ENEMIES +":" + getOnlineEnemies());
             }
