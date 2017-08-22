@@ -47,32 +47,7 @@
 	let player = players[0];
 	//done creating the player
 	
-	//creating the enemy
 	let enemies = [];
-	
-	for(let ii = 0; ii < 10; ii++){
-		enemies.push(new BABYLON.Mesh.CreateBox("enemy", 1, scene));
-		let enemy = enemies[ii];
-		initlifeform(enemy);
-		
-		enemy.body = BABYLON.Mesh.CreateBox("body", 1, scene);
-		enemy.leftfoot = BABYLON.Mesh.CreateBox("leftfoot", 0.5, scene);
-		enemy.rightfoot = BABYLON.Mesh.CreateBox("rightfoot", 0.5, scene);
-		enemy.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
-		enemy.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
-		addbodyparts(enemy);
-	
-		for(let ii = 0; ii < enemy.bodyparts.length; ii++){
-			let part = enemy.bodyparts[ii];
-			part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
-			initbodyparts(part, enemy, part.pos[0], part.pos[1], part.pos[2]); //Params: obj, parent, x, y, z, color
-		}
-		
-		enemy.position.x = Math.floor(Math.random() * 101)-50;
-		enemy.position.z = Math.floor(Math.random() * 101)-50;
-		
-	}
-	//done creating the enemy
 	
 	//creating other players
 	let otherplayers = [];
@@ -149,28 +124,34 @@
         const data = event.data;
         const type = parseInt(data[0]);
         const msg = data.split(":")[1];
+		const obj = JSON.parse(obj);
+		console.log(data);
+		console.log(type);
+		console.log(msg);
         switch (type) {
             case CONNECTED:
-                if (username === msg) return;
-                console.log("User connected:", msg);
-                adduser(msg);
+                if (username === obj.username) return;
+                console.log("User connected:", obj);
+                addplayer(obj);
                 break;
             case DISCONNECTED:
-                console.log("User disconnected:", msg);
-                removeuser(msg);
+                console.log("User disconnected:", obj);
+                removeuser(obj);
                 break;
             case ONLINE_USERS:
-                console.log("Online users:", msg);
-                let users = msg.split(",");
-                users.map((name) => {
-                    adduser(name);
+                console.log("Online users:", obj);
+                let user = obj.split(",$,");
+                users.map((obj) => {
+					console.log(obj);
+                    addotherplayer(obj);
                 });
                 break;
 			case ONLINE_ENEMIES:
-				console.log("Online Enemies:", msg)
-				let enemies = msg.split(",");
-				enemies.map((name) => {
-					addenemy(name);
+				console.log("Online Enemies:", obj);
+				let enemy = obj.split(",$,");
+				enemies.map((obj) => {
+					console.log(obj);
+					addenemy(obj, enemies);
 				});
 				break;
 			case UPDATE_ENEMY_DATA:
@@ -216,7 +197,7 @@
 			let otherplayer = otherplayers[ii];
 			otherplayer.moveWithCollisions(new BABYLON.Vector3(0, otherplayer.gravity, 0));
 		}
-		
+		/*
 		if(checkforbattle(player, enemies)){
 			let enemy = checkforbattle(player, enemies);
 
@@ -235,7 +216,7 @@
 				joinbattle(battlecontainer, enemy, player);
 			}
 		}
-		
+		*/
 		if(player.state === NORMAL){
 			player.hideui();
 			player.walk();
@@ -559,7 +540,28 @@
   
 
   
-  
+  let addenemy = (obj, enemies) =>{
+	  
+		let enemy = BABYLON.Mesh.CreateBox("enemy", 1, scene);
+		enemies.push(enemy);
+		initlifeform(enemy, obj);
+		
+		enemy.body = BABYLON.Mesh.CreateBox("body", 1, scene);
+		enemy.leftfoot = BABYLON.Mesh.CreateBox("leftfoot", 0.5, scene);
+		enemy.rightfoot = BABYLON.Mesh.CreateBox("rightfoot", 0.5, scene);
+		enemy.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
+		enemy.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
+		addbodyparts(enemy);
+	
+		for(let ii = 0; ii < enemy.bodyparts.length; ii++){
+			let part = enemy.bodyparts[ii];
+			part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
+			initbodyparts(part, enemy, part.pos[0], part.pos[1], part.pos[2]); //Params: obj, parent, x, y, z, color
+		}
+		
+		enemy.position.x = obj.x;
+		enemy.position.z = obj.z;
+  }
   
   
   
