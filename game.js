@@ -22,79 +22,19 @@
     let ground = BABYLON.Mesh.CreateGround("ground1", 100, 100, 2, scene);
 	initground(ground);
 	
-	//creating the player
+
 	let players = [];
-	
-	for(let ii = 0; ii < 1; ii++){
-		players.push(BABYLON.Mesh.CreateBox("player", 1, scene));
-		let player = players[ii];
-		initlifeform(player);
-	
-		player.body = BABYLON.Mesh.CreateBox("body", 1, scene);
-		player.leftfoot = BABYLON.Mesh.CreateBox("leftfoot", 0.5, scene);
-		player.rightfoot = BABYLON.Mesh.CreateBox("rightfoot", 0.5, scene);
-		player.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
-		player.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
-		addbodyparts(player);
-	
-		for(let ii = 0; ii < player.bodyparts.length; ii++){
-			let part = player.bodyparts[ii];
-			part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
-			initbodyparts(part, player, part.pos[0], part.pos[1], part.pos[2]); //Params: obj, parent, x, y, z, color
-		}
-	}
-	
-	let player = players[0];
-	//done creating the player
-	
 	let enemies = [];
-	
-	//creating other players
 	let otherplayers = [];
 	
-	for(let ii = 0; ii < 4; ii++){
-		otherplayers.push(BABYLON.Mesh.CreateBox("otherplayer", 1, scene));
-		let otherplayer = otherplayers[ii];
-		initlifeform(otherplayer);
-	
-		otherplayer.body = BABYLON.Mesh.CreateBox("body", 1, scene);
-		otherplayer.leftfoot = BABYLON.Mesh.CreateBox("leftfoot", 0.5, scene);
-		otherplayer.rightfoot = BABYLON.Mesh.CreateBox("rightfoot", 0.5, scene);
-		otherplayer.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
-		otherplayer.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
-		addbodyparts(otherplayer);
-	
-		for(let ii = 0; ii < otherplayer.bodyparts.length; ii++){
-			let part = otherplayer.bodyparts[ii];
-			part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
-			initbodyparts(part, otherplayer, part.pos[0], part.pos[1], part.pos[2]); //Params: obj, parent, x, y, z, color
-		}
-		
-		otherplayer.position.z = 10+ii+ii;
-	}
-	
-	otherplayers[0].position.x = -10
-	otherplayers[1].position.x = -10
-	otherplayers[2].position.x = 10
-	otherplayers[3].position.x = 10
-	
-	otherplayers[0].position.z = 10
-	otherplayers[1].position.z = -10
-	otherplayers[2].position.z = 10
-	otherplayers[3].position.z = -10
-	
-	//done creating other players
-	
-	initcamera(camera, player, scene);
-	
-	let battlecontainer = [];
+	//let battlecontainer = [];
 	
 	
 	
 	
 	
-	
-	const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
+	const socket = new WebSocket('ws://127.0.0.1:8080');
+	//const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
     const username = window.location.search.split("=")[1] || prompt("Please enter your name", "");
     if (window.location.search.split("=")[1] !== username) {
         window.location.replace("?user=" + username);
@@ -110,7 +50,7 @@
 	
 	//send server the username on connect
 	socket.addEventListener('open', function(event) {
-        socket.send(MSG_USERNAME + ":" + username);
+        socket.send(USERNAME + ":" + username);
     });
     socket.addEventListener('close', function(event) {
         console.log("disconnected...");
@@ -124,10 +64,13 @@
         const data = event.data;
         const type = parseInt(data[0]);
         const msg = data.split(":")[1];
-		const obj = JSON.parse(obj);
 		console.log(data);
 		console.log(type);
 		console.log(msg);
+		//const obj = JSON.parse(msg);
+		const obj = msg;
+		console.log(obj.username)
+
         switch (type) {
             case CONNECTED:
                 if (username === obj.username) return;
@@ -136,14 +79,14 @@
                 break;
             case DISCONNECTED:
                 console.log("User disconnected:", obj);
-                removeuser(obj);
+                removeplayer(obj);
                 break;
             case ONLINE_USERS:
                 console.log("Online users:", obj);
                 let user = obj.split(",$,");
                 users.map((obj) => {
 					console.log(obj);
-                    addotherplayer(obj);
+                    addplayer(obj);
                 });
                 break;
 			case ONLINE_ENEMIES:
@@ -163,10 +106,10 @@
         };
     });
 	
+if(players[0]){	
 	
-	
-	
-	
+	let player = players[0];
+	initcamera(camera, player, scene);
 	
 	
 	scene.registerBeforeRender(function() {
@@ -178,12 +121,12 @@
 		const DEAD = 5;
 		
 		player.moveWithCollisions(new BABYLON.Vector3(0, player.gravity, 0)); //gravity
-			
+		
 		for(let ii = 0; ii < enemies.length; ii++){
 			const enemy = enemies[ii];
 			
 			enemy.rotate();
-			if(enemy.state === 0)
+			if(enemy.state === NORMAL)
 				enemy.walk();
 			
 			enemy.moveWithCollisions(new BABYLON.Vector3(0, enemy.gravity, 0));
@@ -193,10 +136,6 @@
 		
 		}
 		
-		for(let ii = 0; ii < otherplayers.length; ii++){
-			let otherplayer = otherplayers[ii];
-			otherplayer.moveWithCollisions(new BABYLON.Vector3(0, otherplayer.gravity, 0));
-		}
 		/*
 		if(checkforbattle(player, enemies)){
 			let enemy = checkforbattle(player, enemies);
@@ -227,10 +166,11 @@
 		}
 		
 	});
-	
+}	
     return scene;
 
   };
+
   
   //initialize the scene
   let initscene = (scene) =>{
@@ -250,132 +190,6 @@
 	camera.maxCameraSpeed = 20 // speed limit
 	camera.lockedTarget = player;
 	scene.activeCamera = camera;
-  }
-  
-  //initialize the lifeform
-  let initlifeform = (obj) =>{
-	obj.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
-	obj.gear = {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0};
-	obj.bodyparts = [];
-	obj.state = 0;
-	obj.position.y = 5;
-	if(obj.id !== "otherplayer")
-		obj.checkCollisions = true;
-	obj.tx = Math.floor(Math.random() * 101)-50;
-	obj.tz = Math.floor(Math.random() * 101)-50;
-	obj.ellipsoid = new BABYLON.Vector3(1, 1, 1);
-	obj.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
-	obj.isVisible = false;
-	obj.walkspd = 0.05;
-	obj.rotatespd = 0.02;
-	obj.gravity = -0.9;
-	if(obj.id === "enemy"){
-		obj.walk = function() {
-			let curposx = obj.position.x;
-			let curposz = obj.position.z;
-			
-			let tposx = obj.tx;
-			let tposz = obj.tz;
-			
-			let posX = obj.walkspd * Math.sin(obj.rotation.y);
-			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-			
-			obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
-			
-			if(tposx.toFixed(0) === curposx.toFixed(0) && tposz.toFixed(0) === curposz.toFixed(0)){
-				obj.tx = Math.floor(Math.random() * 101)-50;
-				obj.tz = Math.floor(Math.random() * 101)-50;
-			}
-		}
-		
-		obj.rotate = function(){
-			let curposx = obj.position.x;
-			let curposz = obj.position.z;
-			
-			let x = obj.tx - curposx;
-			let z = obj.tz - curposz;		
-	
-			obj.rotation = new BABYLON.Vector3(0, Math.atan2(x,z), 0);
-		}				
-	}
-	if(obj.id === "player"){
-		obj.inventory = [];
-		obj.forward = false;
-		obj.backward = false;
-		obj.right = false;
-		obj.left = false;
-		
-		let battleui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("battleUI");
-		obj.uibg = new BABYLON.GUI.Rectangle();
-		addbattleui(battleui, obj.uibg);
-		
-		obj.showui = function() {
-			obj.uibg.isVisible = true;
-		}
-		
-		obj.hideui = function() {
-			obj.uibg.isVisible = false;
-		}
-		
-		obj.walk = function() {
-			
-			if (obj.forward) {
-				let posX = obj.walkspd * Math.sin(obj.rotation.y);
-				let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-				obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
-			} else if (obj.backward) {
-				let posX = obj.walkspd * Math.sin(obj.rotation.y);
-				let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-				obj.moveWithCollisions(new BABYLON.Vector3(-posX, 0,-posZ));	
-			}
-		
-			if(obj.right){
-				obj.rotation.y += obj.rotatespd;
-			}else if(obj.left){
-				obj.rotation.y -= obj.rotatespd;
-			}
-			
-		}
-		
-		window.addEventListener("keydown", function(e) {
-			switch(e.keyCode){
-				case 87: obj.forward = true;
-					break;
-				case 83: obj.backward = true;
-					break;
-				case 68: obj.right = true;
-					break;
-				case 65: obj.left = true;
-					break;
-				default:
-			}
-		});
-	
-		window.addEventListener("keyup", function(e) {
-			switch(e.keyCode){
-				case 87: obj.forward = false;
-					break;
-				case 83: obj.backward = false;
-					break;
-				case 68: obj.right = false;
-					break;
-				case 65: obj.left = false;
-					break;
-				default:
-			}
-		});
-		
-		obj.rotate = function(){
-			let curposx = obj.position.x;
-			let curposz = obj.position.z;
-			
-			let x = obj.tx - curposx;
-			let z = obj.tz - curposz;		
-	
-			obj.rotation = new BABYLON.Vector3(0, Math.atan2(x,z), 0);
-		}
-		
-	}
   }
   
   //add parts to body
@@ -540,28 +354,211 @@
   
 
   
-  let addenemy = (obj, enemies) =>{
+  let addenemy = (serverobj, enemies) =>{
 	  
-		let enemy = BABYLON.Mesh.CreateBox("enemy", 1, scene);
-		enemies.push(enemy);
-		initlifeform(enemy, obj);
+	let enemy = BABYLON.Mesh.CreateBox(serverobj.username, 1, scene);
+	enemies.push(enemy);
+	initenemy(enemy, serverobj);
 		
-		enemy.body = BABYLON.Mesh.CreateBox("body", 1, scene);
-		enemy.leftfoot = BABYLON.Mesh.CreateBox("leftfoot", 0.5, scene);
-		enemy.rightfoot = BABYLON.Mesh.CreateBox("rightfoot", 0.5, scene);
-		enemy.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
-		enemy.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
-		addbodyparts(enemy);
+	enemy.body = BABYLON.Mesh.CreateBox("body", 1, scene);
+	enemy.leftfoot = BABYLON.Mesh.CreateBox("leftfoot", 0.5, scene);
+	enemy.rightfoot = BABYLON.Mesh.CreateBox("rightfoot", 0.5, scene);
+	enemy.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
+	enemy.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
+	addbodyparts(enemy);
 	
-		for(let ii = 0; ii < enemy.bodyparts.length; ii++){
-			let part = enemy.bodyparts[ii];
-			part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
-			initbodyparts(part, enemy, part.pos[0], part.pos[1], part.pos[2]); //Params: obj, parent, x, y, z, color
+	for(let ii = 0; ii < enemy.bodyparts.length; ii++){
+		let part = enemy.bodyparts[ii];
+		part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
+		initbodyparts(part, enemy, part.pos[0], part.pos[1], part.pos[2]); //Params: obj, parent, x, y, z, color
+	}
+		
+	enemy.position.x = serverobj.x;
+	enemy.position.z = serverobj.z;
+	enemy.position.y = serverobj.y;
+  }
+  
+  let initenemy = (obj, serverobj) =>{
+	  
+	obj.stats = serverobj.stats;
+	obj.gear = serverobj.gear;
+	obj.bodyparts = [];
+	obj.state = serverobj.state;
+	obj.checkCollisions = true;
+	obj.tx = serverobj.tx;
+	obj.tz = serverobj.tz;
+	obj.ellipsoid = new BABYLON.Vector3(1, 1, 1);
+	obj.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+	obj.isVisible = false;
+	obj.walkspd = 0.05;
+	obj.rotatespd = 0.02;
+	obj.gravity = -0.9;
+	obj.walk = function() {
+		let curposx = obj.position.x;
+		let curposz = obj.position.z;
+		
+		let tposx = obj.tx;
+		let tposz = obj.tz;
+		
+		let posX = obj.walkspd * Math.sin(obj.rotation.y);
+		let posZ = obj.walkspd * Math.cos(obj.rotation.y);
+		
+		obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
+		
+		if(tposx.toFixed(0) === curposx.toFixed(0) && tposz.toFixed(0) === curposz.toFixed(0)){
+			obj.tx = Math.floor(Math.random() * 101)-50;
+			obj.tz = Math.floor(Math.random() * 101)-50;
+		}
+	}
+		
+	obj.rotate = function(){
+		let curposx = obj.position.x;
+		let curposz = obj.position.z;
+		
+		let x = obj.tx - curposx;
+		let z = obj.tz - curposz;		
+
+		obj.rotation = new BABYLON.Vector3(0, Math.atan2(x,z), 0);
+	}
+  }
+  
+  let addplayer = (serverobj, players) =>{
+	  
+	let player = BABYLON.Mesh.CreateBox(serverobj.username, 1, scene);
+	
+	if(username === serverobj.username){
+		players.push(player);
+		initplayer(player, serverobj);
+	}else{
+		otherplayers.push(player);
+		initotherplayers(player, serverobj)
+	}
+	
+	player.body = BABYLON.Mesh.CreateBox("body", 1, scene);
+	player.leftfoot = BABYLON.Mesh.CreateBox("leftfoot", 0.5, scene);
+	player.rightfoot = BABYLON.Mesh.CreateBox("rightfoot", 0.5, scene);
+	player.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
+	player.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
+	addbodyparts(player);
+	
+	for(let ii = 0; ii < player.bodyparts.length; ii++){
+		let part = player.bodyparts[ii];
+		part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
+		initbodyparts(part, player, part.pos[0], part.pos[1], part.pos[2]); //Params: obj, parent, x, y, z, color
+	}
+	
+	player.position.x = serverobj.x;
+	player.position.z = serverobj.z;
+	player.position.y = serverobj.y;
+  }
+  
+  let initplayer = (obj, serverobj) =>{
+	
+	obj.stats = serverobj.stats;
+	obj.gear = serverobj.gear;
+	obj.bodyparts = [];
+	obj.state = serverobj.state;
+	obj.checkCollisions = true;
+	obj.tx = serverobj.tx;
+	obj.tz = serverobj.tz;
+	obj.ellipsoid = new BABYLON.Vector3(1, 1, 1);
+	obj.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+	obj.isVisible = false;
+	obj.walkspd = 0.05;
+	obj.rotatespd = 0.02;
+	obj.gravity = -0.9;
+	obj.inventory = serverobj.inventory;
+	obj.forward = false;
+	obj.backward = false;
+	obj.right = false;
+	obj.left = false;
+		
+	let battleui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("battleUI");
+	obj.uibg = new BABYLON.GUI.Rectangle();
+	addbattleui(battleui, obj.uibg);
+		
+	obj.showui = function() {
+		obj.uibg.isVisible = true;
+	}
+	
+	obj.hideui = function() {
+		obj.uibg.isVisible = false;
+	}
+		
+	obj.walk = function() {
+		
+		if (obj.forward) {
+			let posX = obj.walkspd * Math.sin(obj.rotation.y);
+			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
+			obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
+		} else if (obj.backward) {
+			let posX = obj.walkspd * Math.sin(obj.rotation.y);
+			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
+			obj.moveWithCollisions(new BABYLON.Vector3(-posX, 0,-posZ));	
+		}
+	
+		if(obj.right){
+			obj.rotation.y += obj.rotatespd;
+		}else if(obj.left){
+			obj.rotation.y -= obj.rotatespd;
 		}
 		
-		enemy.position.x = obj.x;
-		enemy.position.z = obj.z;
+	}
+		
+	window.addEventListener("keydown", function(e) {
+		switch(e.keyCode){
+			case 87: obj.forward = true;
+				break;
+			case 83: obj.backward = true;
+				break;
+			case 68: obj.right = true;
+				break;
+			case 65: obj.left = true;
+				break;
+			default:
+		}
+	});
+	
+	window.addEventListener("keyup", function(e) {
+		switch(e.keyCode){
+			case 87: obj.forward = false;
+				break;
+			case 83: obj.backward = false;
+				break;
+			case 68: obj.right = false;
+				break;
+			case 65: obj.left = false;
+				break;
+			default:
+		}
+	});
+		
+	obj.rotate = function(){
+		let curposx = obj.position.x;
+		let curposz = obj.position.z;
+		
+		let x = obj.tx - curposx;
+		let z = obj.tz - curposz;		
+
+		obj.rotation = new BABYLON.Vector3(0, Math.atan2(x,z), 0);
+	}
   }
+  
+  let initotherplayers = (obj, serverobj) =>{
+	
+	obj.stats = serverobj.stats;
+	obj.gear = serverobj.gear
+	obj.bodyparts = [];
+	obj.state = serverobj.state;
+	obj.ellipsoid = new BABYLON.Vector3(1, 1, 1);
+	obj.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+	obj.isVisible = false;
+  }
+  
+  
+  
+  
+  
   
   
   
