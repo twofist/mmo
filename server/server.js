@@ -78,7 +78,7 @@ let deleteUserFromUsers = (user) => {
 let getOnlineUsers = () => {
     let str = "";
     users.map((user, index) => {
-        str += JSON.stringify(user);
+        str += user;
         if (index < users.length - 1) str += ",!,";
     });
     return (str);
@@ -103,7 +103,7 @@ let broadcastMessage = (type, msg) => {
 //when someone connects
 wss.on('connection', function connection(ws, req) {
     console.log("someone connected");
-    const ip = req.headers['x-forwarded-for'] || ws.upgradeReq.connection.remoteAddress;
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const user = new User({
         ip: ip,
         socket: ws
@@ -123,14 +123,12 @@ wss.on('connection', function connection(ws, req) {
             if (type === USERNAME) {
                 user.username = data;
                 console.log(user.ip + ":" + data, "connected!");
-                broadcastMessage(CONNECTED, JSON.stringify(user));
+                broadcastMessage(CONNECTED, user);
                 user.send(ONLINE_USERS + ":" + getOnlineUsers());
 				user.send(ONLINE_ENEMIES +":" + getOnlineEnemies());
             }
 		//on received message do...
         switch (type) {
-            case :
-                break;
             default:
                 console.log("Unknown message of type", type, "from", ip);
                 break;
