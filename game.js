@@ -2,6 +2,12 @@
 
   let engine = new BABYLON.Engine(canvas, true);
   
+  const username = window.location.search.split("=")[1] || prompt("Please enter your name", "");
+  if (window.location.search.split("=")[1] !== username) {
+    window.location.replace("?user=" + username);
+  }
+  
+  
   let createScene = function () {
 
     let scene = new BABYLON.Scene(engine);
@@ -27,18 +33,10 @@
 	let enemies = [];
 	let otherplayers = [];
 	
-	//let battlecontainer = [];
-	
-	
-	
-	
+	//let battlecontainer = [];	
 	
 	const socket = new WebSocket('ws://127.0.0.1:8080');
 	//const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
-    const username = window.location.search.split("=")[1] || prompt("Please enter your name", "");
-    if (window.location.search.split("=")[1] !== username) {
-        window.location.replace("?user=" + username);
-    }
 	
     const USERNAME = 0;
     const CONNECTED = 1;
@@ -63,30 +61,26 @@
 	socket.addEventListener('message', function(event) {
         const data = event.data;
         const type = parseInt(data[0]);
-        const msg = data.split(":")[1];
-		console.log(data);
-		console.log(type);
-		console.log(msg);
-		//const obj = JSON.parse(msg);
-		const obj = msg;
-		console.log(obj.username)
-
+        const msg = data.split(">:<")[1];
+		const obj = JSON.parse(msg);
+		console.log(obj)
         switch (type) {
             case CONNECTED:
                 if (username === obj.username) return;
-                console.log("User connected:", obj);
-                addplayer(obj);
+                //console.log("User connected:", obj.username);
+                addplayer(obj, players);
                 break;
             case DISCONNECTED:
                 console.log("User disconnected:", obj);
                 removeplayer(obj);
                 break;
             case ONLINE_USERS:
-                console.log("Online users:", obj);
-                let user = obj.split(",$,");
+                //console.log("Online users:", obj.username);
+				const string = JSON.stringify(obj);
+				let users = string.split(",$,");
                 users.map((obj) => {
-					console.log(obj);
-                    addplayer(obj);
+					obj = JSON.parse(obj);
+                    addplayer(obj, players);
                 });
                 break;
 			case ONLINE_ENEMIES:
