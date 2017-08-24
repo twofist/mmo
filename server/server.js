@@ -1,5 +1,5 @@
 const WebSocket = require('ws');
-const PORT = process.env.PORT || 27689;
+const PORT = 8080;//process.env.PORT || 27689;
 const wss = new WebSocket.Server({
     port: PORT
 });
@@ -23,6 +23,7 @@ class User {
         this.ip = obj.ip !== void 0 ? obj.ip : "";
         this.username = obj.username !== void 0 ? obj.username : "";
         this.socket = obj.socket;
+		/*
 		this.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
 		this.gear = {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0};
 		this.tx = 0;
@@ -32,6 +33,18 @@ class User {
 		this.y = 5;
 		this.inventory = [];
 		this.state = 0;
+		*/
+		this.data = {
+			username: obj.username,
+			id: uid,
+			tx: 0,
+			tz: 0,
+			x: 0,
+			z: 0,
+			y: 0,
+			gear: {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0},
+		};
+		
         if (!this.socket) {
             throw new Error("Fatal error, user", this.id, "got no socket!");
         }
@@ -78,7 +91,7 @@ let deleteUserFromUsers = (user) => {
 let getOnlineUsers = () => {
     let str = "";
     users.map((user, index) => {
-        str += user;
+        str += JSON.stringify(user.data);
         if (index < users.length - 1) str += ",!,";
     });
     return (str);
@@ -96,7 +109,7 @@ let getOnlineEnemies = () =>{
 //send message to given user
 let broadcastMessage = (type, msg) => {
     users.map((user) => {
-        user.send(type + ":" + msg);
+        user.send(type + ">:<" + JSON.stringify(msg));
     });
 };
 
@@ -114,7 +127,7 @@ wss.on('connection', function connection(ws, req) {
     ws.on('close', () => {
         deleteUserFromUsers(user);
         console.log(user.ip + ":" + user.username, "disconnected!");
-        broadcastMessage(DISCONNECTED, user.username);
+        broadcastMessage(DISCONNECTED, user.data);
     });
 	//when a message is received
     ws.on('message', function(data) {
@@ -122,10 +135,12 @@ wss.on('connection', function connection(ws, req) {
         data = data.substring(2, data.length);
             if (type === USERNAME) {
                 user.username = data;
+				user.data.username = data;
                 console.log(user.ip + ":" + data, "connected!");
-                broadcastMessage(CONNECTED, user);
-                user.send(ONLINE_USERS + ":" + getOnlineUsers());
-				user.send(ONLINE_ENEMIES +":" + getOnlineEnemies());
+                broadcastMessage(CONNECTED, user.data);
+                user.send(ONLINE_USERS + ">:<" + getOnlineUsers());
+				user.send(ONLINE_ENEMIES +">:<" + getOnlineEnemies());
+				return;
             }
 		//on received message do...
         switch (type) {
