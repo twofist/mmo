@@ -13,8 +13,8 @@
     let scene = new BABYLON.Scene(engine);
 	
 	initscene(scene);
-
-    let camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+	
+	let camera = new BABYLON.FollowCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
 	
     // This creates a light, aiming 0,1,0 - to the sky.
     let light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
@@ -34,7 +34,7 @@
 	let otherplayers = [];
 	
 	//let battlecontainer = [];	
-	let start = false;
+
 	const socket = new WebSocket('ws://127.0.0.1:8080');
 	//const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
 	
@@ -73,8 +73,6 @@
                 if (username === obj.username) return;
                 console.log("User connected:", obj.username);
                 addplayer(obj, players);
-				let player = players[0];
-				initcamera(camera, player, scene);
                 break;
             case DISCONNECTED:
                 console.log("User disconnected:", obj.username);
@@ -88,8 +86,8 @@
                 });
                 break;
 			case ONLINE_ENEMIES:
-				let enemies = obj.split("!!!");
-				enemies.map((obj) => {
+				let opponents = obj.split("!!!");
+				opponents.map((obj) => {
 					addenemy(obj, enemies);
 				});
 				break;
@@ -101,21 +99,22 @@
                 console.log("Unknown message:", data);
                 break;
         };
-		start = true;
-    });	
-	
-	//let player = players[0];
+		initcamera(camera, players[0], scene);
+    });
 	
 	
 	
 	scene.registerBeforeRender(function() {
-		if(players[0]){
+	if(players[0] && enemies[0]){
+			
 		let player = players[0];
+
 		const NORMAL = 0;
 		const INBATTLE = 1;
 		const AFK = 3;
 		const TRADING = 4;
 		const DEAD = 5;
+		
 		player.moveWithCollisions(new BABYLON.Vector3(0, player.gravity, 0)); //gravity
 		
 		for(let ii = 0; ii < enemies.length; ii++){
@@ -160,8 +159,9 @@
 			player.showui();
 			player.rotate();
 		}
-		}	
+	}	
 	});
+	
     return scene;
 
   };
@@ -361,7 +361,7 @@
 	enemy.leftarm = BABYLON.Mesh.CreateBox("leftarm", 0.5, scene);
 	enemy.rightarm = BABYLON.Mesh.CreateBox("rightarm", 0.5, scene);
 	addbodyparts(enemy);
-	
+
 	for(let ii = 0; ii < enemy.bodyparts.length; ii++){
 		let part = enemy.bodyparts[ii];
 		part.material = new BABYLON.StandardMaterial("color", scene); //needed for color
@@ -401,8 +401,8 @@
 		obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
 		
 		if(tposx.toFixed(0) === curposx.toFixed(0) && tposz.toFixed(0) === curposz.toFixed(0)){
-			obj.tx = Math.floor(Math.random() * 101)-50;
-			obj.tz = Math.floor(Math.random() * 101)-50;
+			//obj.tx = Math.floor(Math.random() * 101)-50;
+			//obj.tz = Math.floor(Math.random() * 101)-50;
 		}
 	}
 		
