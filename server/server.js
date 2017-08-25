@@ -78,6 +78,9 @@ class Enemy {
 let users = [];
 let enemies = [];
 
+//enemies.push(new Enemy())
+enemies.push(new Enemy())
+
 //removes the users from the array
 let deleteUserFromUsers = (user) => {
     users.map((us, index) => {
@@ -92,7 +95,7 @@ let getOnlineUsers = () => {
     let str = "";
     users.map((user, index) => {
         str += JSON.stringify(user.data);
-        if (index < users.length - 1) str += ",!,";
+        if (index < users.length - 1) str += "!!!";
     });
     return (str);
 };
@@ -101,7 +104,7 @@ let getOnlineEnemies = () =>{
 	let str = "";
 	enemies.map((enemy, index) => {
 		str += JSON.stringify(enemy);
-		if(index < enemies.length -1) str += ",!,";
+		if(index < enemies.length -1) str += "!!!";
 	});
 	return (str);
 };
