@@ -34,7 +34,7 @@
 	let otherplayers = [];
 	
 	//let battlecontainer = [];	
-	
+	let start = false;
 	const socket = new WebSocket('ws://127.0.0.1:8080');
 	//const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
 	
@@ -62,58 +62,60 @@
         const data = event.data;
         const type = parseInt(data[0]);
         const msg = data.split(">:<")[1];
-		const obj = JSON.parse(msg);
-		console.log(obj)
+		let obj;
+		if(type === ONLINE_USERS || type === ONLINE_ENEMIES){
+			obj = msg;
+		}else{
+			obj = JSON.parse(msg);
+		}
         switch (type) {
             case CONNECTED:
                 if (username === obj.username) return;
-                //console.log("User connected:", obj.username);
+                console.log("User connected:", obj.username);
                 addplayer(obj, players);
+				let player = players[0];
+				initcamera(camera, player, scene);
                 break;
             case DISCONNECTED:
-                console.log("User disconnected:", obj);
+                console.log("User disconnected:", obj.username);
                 removeplayer(obj);
                 break;
             case ONLINE_USERS:
-                //console.log("Online users:", obj.username);
-				const string = JSON.stringify(obj);
-				let users = string.split(",$,");
+				let users = obj.split("!!!");
                 users.map((obj) => {
 					obj = JSON.parse(obj);
                     addplayer(obj, players);
                 });
                 break;
 			case ONLINE_ENEMIES:
-				console.log("Online Enemies:", obj);
-				let enemy = obj.split(",$,");
+				let enemies = obj.split("!!!");
 				enemies.map((obj) => {
-					console.log(obj);
 					addenemy(obj, enemies);
 				});
 				break;
 			case UPDATE_ENEMY_DATA:
 				break;
 			case UPDATE_PLAYER_DATA:
+				break;
             default:
                 console.log("Unknown message:", data);
                 break;
         };
-    });
+		start = true;
+    });	
 	
-if(players[0]){	
+	//let player = players[0];
 	
-	let player = players[0];
-	initcamera(camera, player, scene);
 	
 	
 	scene.registerBeforeRender(function() {
-		
+		if(players[0]){
+		let player = players[0];
 		const NORMAL = 0;
 		const INBATTLE = 1;
 		const AFK = 3;
 		const TRADING = 4;
 		const DEAD = 5;
-		
 		player.moveWithCollisions(new BABYLON.Vector3(0, player.gravity, 0)); //gravity
 		
 		for(let ii = 0; ii < enemies.length; ii++){
@@ -158,9 +160,8 @@ if(players[0]){
 			player.showui();
 			player.rotate();
 		}
-		
+		}	
 	});
-}	
     return scene;
 
   };
@@ -539,7 +540,6 @@ if(players[0]){
   }
   
   let initotherplayers = (obj, serverobj) =>{
-	
 	obj.stats = serverobj.stats;
 	obj.gear = serverobj.gear
 	obj.bodyparts = [];
@@ -548,7 +548,6 @@ if(players[0]){
 	obj.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
 	obj.isVisible = false;
   }
-  
   
   
   
