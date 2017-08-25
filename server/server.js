@@ -41,7 +41,7 @@ class User {
 			tz: 0,
 			x: 0,
 			z: 0,
-			y: 0,
+			y: 1,
 			gear: {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0},
 		};
 		
