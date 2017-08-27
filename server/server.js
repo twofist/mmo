@@ -42,7 +42,10 @@ class User {
 			x: 0,
 			z: 0,
 			y: 1,
+			state: 0,
 			gear: {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0},
+			stats: {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1},
+			inventory: [],
 		};
 		
         if (!this.socket) {
