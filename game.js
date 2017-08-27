@@ -72,7 +72,7 @@
             case CONNECTED:
                 if (username === obj.username) return;
                 console.log("User connected:", obj.username);
-                addplayer(obj, players);
+                addplayer(obj, players, otherplayers);
                 break;
             case DISCONNECTED:
                 console.log("User disconnected:", obj.username);
@@ -82,12 +82,13 @@
 				let users = obj.split("!!!");
                 users.map((obj) => {
 					obj = JSON.parse(obj);
-                    addplayer(obj, players);
+                    addplayer(obj, players, otherplayers);
                 });
                 break;
 			case ONLINE_ENEMIES:
 				let opponents = obj.split("!!!");
 				opponents.map((obj) => {
+					obj = JSON.parse(obj);
 					addenemy(obj, enemies);
 				});
 				break;
@@ -105,10 +106,9 @@
 	
 	
 	scene.registerBeforeRender(function() {
-	if(players[0] && enemies[0]){
-			
+	if(players[0]){
+			//console.log(enemies)
 		let player = players[0];
-
 		const NORMAL = 0;
 		const INBATTLE = 1;
 		const AFK = 3;
@@ -212,11 +212,11 @@
 	obj.position.y = posy;
 	obj.position.z = posz;
 	let color = [];
-	if(Parent.id === "player")
+	if(Parent.id === username)
 		color = [1.0, 0.2, 0.7];
-	else if(Parent.id === "enemy")
+	else if(Parent.id === "slime")
 		color = [0.5, 1, 0.5];
-	else if(Parent.id === "otherplayer")
+	else if(Parent.id !== username && Parent.id !== "slime")
 		color = [0.7, 0.3, 0.2];
 	else
 		console.log("not a player, enemy or otherplayer")
@@ -374,7 +374,7 @@
   }
   
   let initenemy = (obj, serverobj) =>{
-	  
+	
 	obj.stats = serverobj.stats;
 	obj.gear = serverobj.gear;
 	obj.bodyparts = [];
@@ -417,7 +417,7 @@
 	}
   }
   
-  let addplayer = (serverobj, players) =>{
+  let addplayer = (serverobj, players, otherplayers) =>{
 	  
 	let player = BABYLON.Mesh.CreateBox(serverobj.username, 1, scene);
 	
@@ -479,7 +479,7 @@
 	obj.hideui = function() {
 		obj.uibg.isVisible = false;
 	}
-		
+
 	obj.walk = function() {
 		
 		if (obj.forward) {
