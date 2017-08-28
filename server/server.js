@@ -21,7 +21,6 @@ class User {
     constructor(obj) {
         this.id = uid++;
         this.ip = obj.ip !== void 0 ? obj.ip : "";
-        this.username = obj.username !== void 0 ? obj.username : "";
         this.socket = obj.socket;
 		/*
 		this.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
@@ -36,7 +35,7 @@ class User {
 		*/
 		this.data = {
 			servertype: 0,
-			username: obj.username,
+			username: obj.username !== void 0 ? obj.username : "",
 			id: uid,
 			tx: 0,
 			tz: 0,
@@ -59,7 +58,7 @@ class User {
     }
 	//valid username
     isValid() {
-        return (this.username !== "");
+        return (this.data.username !== "");
     }
 };
 
@@ -99,6 +98,7 @@ let deleteUserFromUsers = (user) => {
 let getOnlineUsers = () => {
     let str = "";
     users.map((user, index) => {
+		user.data.servertype = ONLINE_USERS;
         str += JSON.stringify(user.data);
         if (index < users.length - 1) str += "!!!";
     });
@@ -108,6 +108,7 @@ let getOnlineUsers = () => {
 let getOnlineEnemies = () =>{
 	let str = "";
 	enemies.map((enemy, index) => {
+		enemy.servertype = ONLINE_ENEMIES;
 		str += JSON.stringify(enemy);
 		if(index < enemies.length -1) str += "!!!";
 	});
@@ -115,8 +116,9 @@ let getOnlineEnemies = () =>{
 };
 
 //send message to given user
-let broadcastMessage = (msg) => {
+let broadcastMessage = (type, msg) => {
     users.map((user) => {
+		user.data.servertype = type;
         user.send(JSON.stringify(msg));
     });
 };
@@ -134,18 +136,17 @@ wss.on('connection', function connection(ws, req) {
 	//remove user from array
     ws.on('close', () => {
         deleteUserFromUsers(user);
-        console.log(user.ip + ":" + user.username, "disconnected!");
+        console.log(user.ip + ":" + user.data.username, "disconnected!");
         broadcastMessage(DISCONNECTED, user.data);
     });
 	//when a message is received
     ws.on('message', function(data) {
-		const servertype = data.split("servertype:");
-        const type = parseInt(servertype[0]);
+		const servertype = data.split('"servertype":')[1];
+        const type = parseInt(servertype);
             if (type === USERNAME) {
-                user.username = data;
-				user.data.username = data;
-                console.log(user.ip + ":" + data, "connected!");
-                broadcastMessage(user.data);
+                user.data.username = data.split('"servertype":' + USERNAME + " ")[1];
+                console.log(user.ip + ":" + user.data.username, "connected!");
+                broadcastMessage(CONNECTED, user.data);
                 user.send(getOnlineUsers());
 				user.send(getOnlineEnemies());
 				return;
