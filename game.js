@@ -48,7 +48,7 @@
 	
 	//send server the username on connect
 	socket.addEventListener('open', function(event) {
-        socket.send(USERNAME + ":" + username);
+        socket.send('"servertype":' + USERNAME + " " + username);
     });
     socket.addEventListener('close', function(event) {
         console.log("disconnected...");
@@ -60,9 +60,8 @@
 	//listen for enemy/player changes
 	socket.addEventListener('message', function(event) {
         const data = event.data;
-		const servertype = data.split("servertype:")[1];
-        const type = parseInt(msgtype);
-        //const msg = data.split(">:<")[1];
+		const servertype = data.split('"servertype":')[1];
+        const type = parseInt(servertype);
 		let obj;
 		if(type === ONLINE_USERS || type === ONLINE_ENEMIES){
 			obj = data;
@@ -419,9 +418,9 @@
   }
   
   let addplayer = (serverobj, players, otherplayers) =>{
-	  
+	 
 	let player = BABYLON.Mesh.CreateBox(serverobj.username, 1, scene);
-	
+
 	if(username === serverobj.username){
 		players.push(player);
 		initplayer(player, serverobj);
