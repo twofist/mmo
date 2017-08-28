@@ -60,13 +60,14 @@
 	//listen for enemy/player changes
 	socket.addEventListener('message', function(event) {
         const data = event.data;
-        const type = parseInt(data[0]);
-        const msg = data.split(">:<")[1];
+		const servertype = data.split("servertype:")[1];
+        const type = parseInt(msgtype);
+        //const msg = data.split(">:<")[1];
 		let obj;
 		if(type === ONLINE_USERS || type === ONLINE_ENEMIES){
-			obj = msg;
+			obj = data;
 		}else{
-			obj = JSON.parse(msg);
+			obj = JSON.parse(data);
 		}
         switch (type) {
             case CONNECTED:
