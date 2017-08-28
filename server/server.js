@@ -35,6 +35,7 @@ class User {
 		this.state = 0;
 		*/
 		this.data = {
+			servertype: 0,
 			username: obj.username,
 			id: uid,
 			tx: 0,
@@ -65,6 +66,7 @@ class User {
 //enemy class
 class Enemy {
 	constructor(obj){
+		this.servertype = 0;
 		this.id = eid++;
 		this.username = "slime";
 		this.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
@@ -113,9 +115,9 @@ let getOnlineEnemies = () =>{
 };
 
 //send message to given user
-let broadcastMessage = (type, msg) => {
+let broadcastMessage = (msg) => {
     users.map((user) => {
-        user.send(type + ">:<" + JSON.stringify(msg));
+        user.send(JSON.stringify(msg));
     });
 };
 
@@ -137,15 +139,15 @@ wss.on('connection', function connection(ws, req) {
     });
 	//when a message is received
     ws.on('message', function(data) {
-        const type = parseInt(data[0]);
-        data = data.substring(2, data.length);
+		const servertype = data.split("servertype:");
+        const type = parseInt(servertype[0]);
             if (type === USERNAME) {
                 user.username = data;
 				user.data.username = data;
                 console.log(user.ip + ":" + data, "connected!");
-                broadcastMessage(CONNECTED, user.data);
-                user.send(ONLINE_USERS + ">:<" + getOnlineUsers());
-				user.send(ONLINE_ENEMIES +">:<" + getOnlineEnemies());
+                broadcastMessage(user.data);
+                user.send(getOnlineUsers());
+				user.send(getOnlineEnemies());
 				return;
             }
 		//on received message do...
