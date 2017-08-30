@@ -43,8 +43,11 @@
     const DISCONNECTED = 2;
     const ONLINE_USERS = 3;
 	const ONLINE_ENEMIES = 4;
-    const UPDATE_ENEMY_DATA = 5;
-	const UPDATE_PLAYER_DATA = 6;
+    const UPDATE_ENEMY_TARGETPOSITION = 5;
+	const UPDATE_PLAYER_POSITION = 6;
+	const UPDATE_PLAYER_INVENTORY = 7;
+	const UPDATE_PLAYER_ANIMATION = 8;
+	const UPDATE_PLAYER_STATS = 9;
 	
 	//send server the username on connect
 	socket.addEventListener('open', function(event) {
@@ -376,6 +379,7 @@
   let initenemy = (obj, serverobj) =>{
 	
 	obj.stats = serverobj.stats;
+	obj.senddata = {};
 	obj.gear = serverobj.gear;
 	obj.bodyparts = [];
 	obj.state = serverobj.state;
@@ -403,6 +407,7 @@
 		if(tposx.toFixed(0) === curposx.toFixed(0) && tposz.toFixed(0) === curposz.toFixed(0)){
 			//obj.tx = Math.floor(Math.random() * 101)-50;
 			//obj.tz = Math.floor(Math.random() * 101)-50;
+			sendgettargetposition(obj.senddata, curposx, curposz, tposx, tposz);
 		}
 	}
 		
@@ -411,7 +416,7 @@
 		let curposz = obj.position.z;
 		
 		let x = obj.tx - curposx;
-		let z = obj.tz - curposz;		
+		let z = obj.tz - curposz;
 
 		obj.rotation = new BABYLON.Vector3(0, Math.atan2(x,z), 0);
 	}
@@ -450,6 +455,7 @@
   let initplayer = (obj, serverobj) =>{
 	
 	obj.stats = serverobj.stats;
+	obj.senddata = {};
 	obj.gear = serverobj.gear;
 	obj.bodyparts = [];
 	obj.state = serverobj.state;
@@ -485,16 +491,20 @@
 		if (obj.forward) {
 			let posX = obj.walkspd * Math.sin(obj.rotation.y);
 			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
+			sendposition(obj.senddata, posX, 0, posZ);
 			obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
 		} else if (obj.backward) {
 			let posX = obj.walkspd * Math.sin(obj.rotation.y);
 			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
+			sendposition(obj.senddata, posX, 0, posZ);
 			obj.moveWithCollisions(new BABYLON.Vector3(-posX, 0,-posZ));	
 		}
 	
 		if(obj.right){
+			sendrotation(obj.senddata, obj.rotation.y);
 			obj.rotation.y += obj.rotatespd;
 		}else if(obj.left){
+			sendrotation(obj.senddata, obj.rotation.y);
 			obj.rotation.y -= obj.rotatespd;
 		}
 		
@@ -535,6 +545,8 @@
 		let x = obj.tx - curposx;
 		let z = obj.tz - curposz;		
 
+		sendrotation(obj.senddata, Math.atan2(x,z));
+		
 		obj.rotation = new BABYLON.Vector3(0, Math.atan2(x,z), 0);
 	}
   }
@@ -572,3 +584,49 @@
   
   
  
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   let sendposition = (obj, posX, posY, posZ) =>{
+	obj = {
+		servertype: UPDATE_PLAYER_POSITION,
+		movex: posX,
+		movey: posY,
+		movez: posZ
+	};
+	socket.send(obj);
+  }
+  
+  let sendrotation = (obj, rotation) =>{
+	obj = {
+		servertype: UPDATE_PLAYER_ROTATION,
+		rotationy: rotation;
+	};
+	socket.send(obj);
+  }
+  
+  let sendinventory = (obj, Inventory, Gear) =>{
+	obj = {
+		servertype: UPDATE_PLAYER_INVENTORY,
+		inventory: Inventory,
+		gear: Gear
+	};
+	socket.send(obj);
+  }
+  
+  let sendgettargetposition = (obj, x, z, tx, tz) =>{
+	obj = {
+		servertype: UPDATE_ENEMY_TARGETPOSITION,
+		X: x,
+		Z: z,
+		TX: tx,
+		TZ: tz		
+	}; 
+	socket.send(obj);
+  }
