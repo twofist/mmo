@@ -3,16 +3,18 @@ const PORT = 8080;//process.env.PORT || 27689;
 const wss = new WebSocket.Server({
     port: PORT
 });
-const USERNAME = 0;
-const CONNECTED = 1;
-const DISCONNECTED = 2;
-const ONLINE_USERS = 3;
-const ONLINE_ENEMIES = 4;
-const UPDATE_ENEMY_DATA = 5;
-const UPDATE_PLAYER_DATA = 6;
+	const USERNAME = 0;
+    const CONNECTED = 1;
+    const DISCONNECTED = 2;
+    const ONLINE_USERS = 3;
+	const ONLINE_ENEMIES = 4;
+    const UPDATE_ENEMY_TARGETPOSITION = 5;
+	const UPDATE_PLAYER_POSITION = 6;
+	const UPDATE_PLAYER_INVENTORY = 7;
+	const UPDATE_PLAYER_ANIMATION = 8;
+	const UPDATE_PLAYER_STATS = 9;
 
 let uid = 0;
-let eid = 0;
 
 console.log("Listening on", PORT);
 
@@ -22,21 +24,10 @@ class User {
         this.id = uid++;
         this.ip = obj.ip !== void 0 ? obj.ip : "";
         this.socket = obj.socket;
-		/*
-		this.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
-		this.gear = {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0};
-		this.tx = 0;
-		this.tz = 0;
-		this.x = 0;
-		this.z = 0;
-		this.y = 5;
-		this.inventory = [];
-		this.state = 0;
-		*/
 		this.data = {
 			servertype: 0,
 			username: obj.username !== void 0 ? obj.username : "",
-			id: uid,
+			id: obj.id,
 			tx: 0,
 			tz: 0,
 			x: 0,
@@ -46,6 +37,9 @@ class User {
 			gear: {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0},
 			stats: {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1},
 			inventory: [],
+			gravity: -0.9,
+			walkspd: 0.05,
+			rotatespd: 0.02
 		};
 		
         if (!this.socket) {
@@ -66,7 +60,7 @@ class User {
 class Enemy {
 	constructor(obj){
 		this.servertype = 0;
-		this.id = eid++;
+		this.id = uid++;
 		this.username = "slime";
 		this.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
 		this.gear = {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0};
@@ -76,6 +70,9 @@ class Enemy {
 		this.state = 0;
 		this.tx = Math.floor(Math.random() * 101)-50;
 		this.tz = Math.floor(Math.random() * 101)-50;
+		this.gravity: -0.9;
+		this.walkspd: 0.05;
+		this.rotatespd: 0.02;
 	}
 };
 
