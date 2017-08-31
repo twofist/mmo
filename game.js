@@ -378,6 +378,7 @@
   
   let initenemy = (obj, serverobj) =>{
 	
+	obj.id = serverobj.id;
 	obj.stats = serverobj.stats;
 	obj.senddata = {};
 	obj.gear = serverobj.gear;
@@ -389,9 +390,9 @@
 	obj.ellipsoid = new BABYLON.Vector3(1, 1, 1);
 	obj.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
 	obj.isVisible = false;
-	obj.walkspd = 0.05;
-	obj.rotatespd = 0.02;
-	obj.gravity = -0.9;
+	obj.walkspd = serverobj.walkspd;
+	obj.rotatespd = serverobj.rotatespd;
+	obj.gravity = serverobj.gravity;
 	obj.walk = function() {
 		let curposx = obj.position.x;
 		let curposz = obj.position.z;
@@ -401,13 +402,13 @@
 		
 		let posX = obj.walkspd * Math.sin(obj.rotation.y);
 		let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-		
+		sendposition(obj.senddata, posX, 0, posZ, UPDATE_ENEMY_POSITION);
 		obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
 		
 		if(tposx.toFixed(0) === curposx.toFixed(0) && tposz.toFixed(0) === curposz.toFixed(0)){
 			//obj.tx = Math.floor(Math.random() * 101)-50;
 			//obj.tz = Math.floor(Math.random() * 101)-50;
-			sendgettargetposition(obj.senddata, curposx, curposz, tposx, tposz);
+			//sendgettargetposition(obj.senddata, curposx, curposz, tposx, tposz);
 		}
 	}
 		
@@ -453,7 +454,7 @@
   }
   
   let initplayer = (obj, serverobj) =>{
-	
+	obj.id = serverobj.id;
 	obj.stats = serverobj.stats;
 	obj.senddata = {};
 	obj.gear = serverobj.gear;
@@ -465,9 +466,9 @@
 	obj.ellipsoid = new BABYLON.Vector3(1, 1, 1);
 	obj.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
 	obj.isVisible = false;
-	obj.walkspd = 0.05;
-	obj.rotatespd = 0.02;
-	obj.gravity = -0.9;
+	obj.walkspd = serverobj.walkspd;
+	obj.rotatespd = serverobj.rotatespd;
+	obj.gravity = serverobj.gravity;
 	obj.inventory = serverobj.inventory;
 	obj.forward = false;
 	obj.backward = false;
@@ -491,21 +492,21 @@
 		if (obj.forward) {
 			let posX = obj.walkspd * Math.sin(obj.rotation.y);
 			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-			sendposition(obj.senddata, posX, 0, posZ);
+			sendposition(obj.senddata, posX, 0, posZ, UPDATE_PLAYER_POSITION);
 			obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
 		} else if (obj.backward) {
 			let posX = obj.walkspd * Math.sin(obj.rotation.y);
 			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-			sendposition(obj.senddata, posX, 0, posZ);
+			sendposition(obj.senddata, posX, 0, posZ, UPDATE_PLAYER_POSITION);
 			obj.moveWithCollisions(new BABYLON.Vector3(-posX, 0,-posZ));	
 		}
 	
 		if(obj.right){
-			sendrotation(obj.senddata, obj.rotation.y);
 			obj.rotation.y += obj.rotatespd;
-		}else if(obj.left){
 			sendrotation(obj.senddata, obj.rotation.y);
+		}else if(obj.left){
 			obj.rotation.y -= obj.rotatespd;
+			sendrotation(obj.senddata, obj.rotation.y);
 		}
 		
 	}
@@ -552,6 +553,7 @@
   }
   
   let initotherplayers = (obj, serverobj) =>{
+	obj.id = serverobj.id;
 	obj.stats = serverobj.stats;
 	obj.gear = serverobj.gear
 	obj.bodyparts = [];
@@ -593,9 +595,9 @@
  
  
  
-   let sendposition = (obj, posX, posY, posZ) =>{
+  let sendposition = (obj, posX, posY, posZ, type) =>{
 	obj = {
-		servertype: UPDATE_PLAYER_POSITION,
+		servertype: type,
 		movex: posX,
 		movey: posY,
 		movez: posZ
