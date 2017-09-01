@@ -48,6 +48,7 @@
 	const UPDATE_PLAYER_INVENTORY = 7;
 	const UPDATE_PLAYER_ANIMATION = 8;
 	const UPDATE_PLAYER_STATS = 9;
+	const UPDATE_ENEMY_POSITION = 10;
 	
 	//send server the username on connect
 	socket.addEventListener('open', function(event) {
@@ -402,7 +403,7 @@
 		
 		let posX = obj.walkspd * Math.sin(obj.rotation.y);
 		let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-		sendposition(obj.senddata, posX, 0, posZ, UPDATE_ENEMY_POSITION);
+		sendposition(obj, UPDATE_ENEMY_POSITION);
 		obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
 		
 		if(tposx.toFixed(0) === curposx.toFixed(0) && tposz.toFixed(0) === curposz.toFixed(0)){
@@ -492,21 +493,21 @@
 		if (obj.forward) {
 			let posX = obj.walkspd * Math.sin(obj.rotation.y);
 			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-			sendposition(obj.senddata, posX, 0, posZ, UPDATE_PLAYER_POSITION);
+			sendposition(obj, UPDATE_PLAYER_POSITION);
 			obj.moveWithCollisions(new BABYLON.Vector3(posX, 0, posZ));
 		} else if (obj.backward) {
 			let posX = obj.walkspd * Math.sin(obj.rotation.y);
 			let posZ = obj.walkspd * Math.cos(obj.rotation.y);
-			sendposition(obj.senddata, posX, 0, posZ, UPDATE_PLAYER_POSITION);
+			sendposition(obj, UPDATE_PLAYER_POSITION);
 			obj.moveWithCollisions(new BABYLON.Vector3(-posX, 0,-posZ));	
 		}
 	
 		if(obj.right){
 			obj.rotation.y += obj.rotatespd;
-			sendrotation(obj.senddata, obj.rotation.y);
+			sendrotation(obj);
 		}else if(obj.left){
 			obj.rotation.y -= obj.rotatespd;
-			sendrotation(obj.senddata, obj.rotation.y);
+			sendrotation(obj);
 		}
 		
 	}
@@ -546,7 +547,7 @@
 		let x = obj.tx - curposx;
 		let z = obj.tz - curposz;		
 
-		sendrotation(obj.senddata, Math.atan2(x,z));
+		sendrotation(obj);
 		
 		obj.rotation = new BABYLON.Vector3(0, Math.atan2(x,z), 0);
 	}
@@ -595,40 +596,44 @@
  
  
  
-  let sendposition = (obj, posX, posY, posZ, type) =>{
-	obj = {
-		servertype: type,
-		movex: posX,
-		movey: posY,
-		movez: posZ
+  let sendposition = (obj, type) =>{
+	obj.senddata = {
+		servertype: obj.type,
+		id: obj.id,
+		x: obj.position.x,
+		y: obj.position.y,
+		z: obj.position.z
 	};
-	socket.send(obj);
+	socket.send(obj.senddata);
   }
   
-  let sendrotation = (obj, rotation) =>{
-	obj = {
+  let sendrotation = (obj) =>{
+	obj.senddata = {
 		servertype: UPDATE_PLAYER_ROTATION,
-		rotationy: rotation;
+		id: obj.id,
+		rotation: Math.atan2(x,z);
 	};
-	socket.send(obj);
+	socket.send(obj.senddata);
   }
   
-  let sendinventory = (obj, Inventory, Gear) =>{
-	obj = {
+  let sendinventory = (obj) =>{
+	obj.senddata = {
 		servertype: UPDATE_PLAYER_INVENTORY,
-		inventory: Inventory,
-		gear: Gear
+		id: obj.id,
+		inventory: obj.inventory,
+		gear: obj.gear
 	};
 	socket.send(obj);
   }
   
-  let sendgettargetposition = (obj, x, z, tx, tz) =>{
-	obj = {
+  let sendgettargetposition = (obj) =>{
+	obj.senddata = {
 		servertype: UPDATE_ENEMY_TARGETPOSITION,
-		X: x,
-		Z: z,
-		TX: tx,
-		TZ: tz		
+		id: obj.id,
+		x: obj.position.x,
+		z: obj.position.z,
+		tx: obj.tx,
+		tz: obj.tz		
 	}; 
 	socket.send(obj);
   }
