@@ -13,6 +13,7 @@ const wss = new WebSocket.Server({
 	const UPDATE_PLAYER_INVENTORY = 7;
 	const UPDATE_PLAYER_ANIMATION = 8;
 	const UPDATE_PLAYER_STATS = 9;
+	const UPDATE_ENEMY_POSITION = 10;
 
 let uid = 0;
 
@@ -120,6 +121,22 @@ let broadcastMessage = (type, msg) => {
     });
 };
 
+let userAlreadyConnected = (user) => {
+    for (let ii = 0; ii < users.length; ++ii) {
+        const us = users[ii];
+        if (us.ip === user.ip) return (true);
+    };
+    return (false);
+};
+
+let adduser = (user, data) =>{
+	user.data.username = data.split('"servertype":' + USERNAME + " ")[1];
+    console.log(user.ip + ":" + user.data.username, "connected!");
+    broadcastMessage(CONNECTED, user.data);
+    user.send(getOnlineUsers());
+	user.send(getOnlineEnemies());
+};
+
 //when someone connects
 wss.on('connection', function connection(ws, req) {
     console.log("someone connected");
@@ -128,6 +145,10 @@ wss.on('connection', function connection(ws, req) {
         ip: ip,
         socket: ws
     });
+	/*if (userAlreadyConnected(user)) {
+        console.log("Already connected, skipping!");
+        return;
+    }*/
     users.push(user);
     console.log(users.length, "connected users!");
 	//remove user from array
@@ -140,16 +161,26 @@ wss.on('connection', function connection(ws, req) {
     ws.on('message', function(data) {
 		const servertype = data.split('"servertype":')[1];
         const type = parseInt(servertype);
-            if (type === USERNAME) {
-                user.data.username = data.split('"servertype":' + USERNAME + " ")[1];
-                console.log(user.ip + ":" + user.data.username, "connected!");
-                broadcastMessage(CONNECTED, user.data);
-                user.send(getOnlineUsers());
-				user.send(getOnlineEnemies());
-				return;
-            }
+		const obj = JSON.parse(data);
 		//on received message do...
         switch (type) {
+			case: UPDATE_ENEMY_TARGETPOSITION
+					updateenemytargetposition(obj, type);
+				break;
+			case: UPDATE_PLAYER_ANIMATION
+				break;
+			case: UPDATE_PLAYER_POSITION
+					updateplayerposition(user, obj, type);
+				break;
+			case: UPDATE_PLAYER_INVENTORY
+					updateplayerinventory(user, obj, type);
+				break;
+			case: UPDATE_PLAYER_STATS
+				break;
+			case: UPDATE_ENEMY_POSITION
+				break;
+			case: USERNAME
+				adduser(user, data);
             default:
                 console.log("Unknown message of type", type, "from", ip);
                 break;
@@ -157,3 +188,36 @@ wss.on('connection', function connection(ws, req) {
 
     });
 });
+
+
+
+
+let updateplayerposition = (user, obj, type) =>{
+	
+	user.data.x = obj.x;
+	user.data.z = obj.z;
+	user.data.y = obj.y;
+	
+	broadcastMessage(type, user.data);
+	
+}
+
+let updateplayerinventory = (user, obj, type) =>{
+	
+	user.data.inventory = obj.inventory;
+	user.data.gear = obj.gear;
+	
+	broadcastMessage(type, user.data);
+	
+}
+
+let updateenemytargetposition = (obj, type) =>{
+	
+	enemy.tx = Math.floor(Math.random() * 101)-50;
+	enemy.tz = Math.floor(Math.random() * 101)-50;
+	
+	broadcastMessage(type, enemy);
+	
+}
+
+
