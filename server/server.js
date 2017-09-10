@@ -28,7 +28,7 @@ class User {
 		this.data = {
 			servertype: 0,
 			username: obj.username !== void 0 ? obj.username : "",
-			id: obj.id,
+			idn: uid,
 			tx: 0,
 			tz: 0,
 			x: 0,
@@ -61,7 +61,7 @@ class User {
 class Enemy {
 	constructor(obj){
 		this.servertype = 0;
-		this.id = uid++;
+		this.idn = uid++;
 		this.username = "slime";
 		this.stats = {health: 1, attack: 1, magic: 1, accuracy: 1, dodge: 1, stunchance: 1, stamina: 1, armor: 1, speed: 1};
 		this.gear = {head: 0, necklace: 0, body: 0, righthand: 0, lefthand: 0, rings: 0, shoes: 0};
@@ -71,9 +71,9 @@ class Enemy {
 		this.state = 0;
 		this.tx = Math.floor(Math.random() * 101)-50;
 		this.tz = Math.floor(Math.random() * 101)-50;
-		this.gravity: -0.9;
-		this.walkspd: 0.05;
-		this.rotatespd: 0.02;
+		this.gravity = -0.9;
+		this.walkspd = 0.05;
+		this.rotatespd = 0.02;
 	}
 };
 
@@ -161,28 +161,30 @@ wss.on('connection', function connection(ws, req) {
     ws.on('message', function(data) {
 		const servertype = data.split('"servertype":')[1];
         const type = parseInt(servertype);
-		const obj = JSON.parse(data);
+		let obj;
+		if(type !== USERNAME)
+			obj = JSON.parse(data);
 		//on received message do...
         switch (type) {
-			case: UPDATE_ENEMY_TARGETPOSITION
+			case UPDATE_ENEMY_TARGETPOSITION:
 					updateenemytargetposition(obj, type);
 				break;
-			case: UPDATE_PLAYER_ANIMATION
+			case UPDATE_PLAYER_ANIMATION:
 				break;
-			case: UPDATE_PLAYER_POSITION
+			case UPDATE_PLAYER_POSITION:
 					updateplayerposition(user, obj, type);
 				break;
-			case: UPDATE_PLAYER_INVENTORY
+			case UPDATE_PLAYER_INVENTORY:
 					updateplayerinventory(user, obj, type);
 				break;
-			case: UPDATE_PLAYER_STATS
+			case UPDATE_PLAYER_STATS:
 				break;
-			case: UPDATE_ENEMY_POSITION
+			case UPDATE_ENEMY_POSITION:
 				break;
-			case: USERNAME
+			case USERNAME:
 				adduser(user, data);
             default:
-                console.log("Unknown message of type", type, "from", ip);
+                console.log("Unknown message of type", type, "from", ip, "data:", data);
                 break;
         };
 
@@ -219,5 +221,4 @@ let updateenemytargetposition = (obj, type) =>{
 	broadcastMessage(type, enemy);
 	
 }
-
 
