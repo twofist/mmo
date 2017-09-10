@@ -1,3 +1,18 @@
+	const socket = new WebSocket('ws://127.0.0.1:8080');
+	//const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
+	
+	const USERNAME = 0;
+    const CONNECTED = 1;
+    const DISCONNECTED = 2;
+    const ONLINE_USERS = 3;
+	const ONLINE_ENEMIES = 4;
+    const UPDATE_ENEMY_TARGETPOSITION = 5;
+	const UPDATE_PLAYER_POSITION = 6;
+	const UPDATE_PLAYER_INVENTORY = 7;
+	const UPDATE_PLAYER_ANIMATION = 8;
+	const UPDATE_PLAYER_STATS = 9;
+	const UPDATE_ENEMY_POSITION = 10;
+
   let canvas = document.getElementById("canvas");
 
   let engine = new BABYLON.Engine(canvas, true);
@@ -34,21 +49,6 @@
 	let otherplayers = [];
 	
 	//let battlecontainer = [];	
-
-	const socket = new WebSocket('ws://127.0.0.1:8080');
-	//const socket = new WebSocket('wss://twofist-chat-server.herokuapp.com');
-	
-    const USERNAME = 0;
-    const CONNECTED = 1;
-    const DISCONNECTED = 2;
-    const ONLINE_USERS = 3;
-	const ONLINE_ENEMIES = 4;
-    const UPDATE_ENEMY_TARGETPOSITION = 5;
-	const UPDATE_PLAYER_POSITION = 6;
-	const UPDATE_PLAYER_INVENTORY = 7;
-	const UPDATE_PLAYER_ANIMATION = 8;
-	const UPDATE_PLAYER_STATS = 9;
-	const UPDATE_ENEMY_POSITION = 10;
 	
 	//send server the username on connect
 	socket.addEventListener('open', function(event) {
@@ -95,10 +95,6 @@
 					obj = JSON.parse(obj);
 					addenemy(obj, enemies);
 				});
-				break;
-			case UPDATE_ENEMY_DATA:
-				break;
-			case UPDATE_PLAYER_DATA:
 				break;
             default:
                 console.log("Unknown message:", data);
@@ -379,7 +375,7 @@
   
   let initenemy = (obj, serverobj) =>{
 	
-	obj.id = serverobj.id;
+	obj.idn = serverobj.idn;
 	obj.stats = serverobj.stats;
 	obj.senddata = {};
 	obj.gear = serverobj.gear;
@@ -427,7 +423,7 @@
   let addplayer = (serverobj, players, otherplayers) =>{
 	 
 	let player = BABYLON.Mesh.CreateBox(serverobj.username, 1, scene);
-
+	
 	if(username === serverobj.username){
 		players.push(player);
 		initplayer(player, serverobj);
@@ -455,7 +451,7 @@
   }
   
   let initplayer = (obj, serverobj) =>{
-	obj.id = serverobj.id;
+	obj.idn = serverobj.idn;
 	obj.stats = serverobj.stats;
 	obj.senddata = {};
 	obj.gear = serverobj.gear;
@@ -554,7 +550,7 @@
   }
   
   let initotherplayers = (obj, serverobj) =>{
-	obj.id = serverobj.id;
+	obj.idn = serverobj.idn;
 	obj.stats = serverobj.stats;
 	obj.gear = serverobj.gear
 	obj.bodyparts = [];
@@ -598,42 +594,47 @@
  
   let sendposition = (obj, type) =>{
 	obj.senddata = {
-		servertype: obj.type,
-		id: obj.id,
+		servertype: type,
+		idn: obj.idn,
 		x: obj.position.x,
 		y: obj.position.y,
 		z: obj.position.z
 	};
-	socket.send(obj.senddata);
+	let string = JSON.stringify(obj.senddata);
+	socket.send(string);
   }
   
+  //UPDATE_PLAYER_ROTATION
   let sendrotation = (obj) =>{
 	obj.senddata = {
-		servertype: UPDATE_PLAYER_ROTATION,
-		id: obj.id,
-		rotation: Math.atan2(x,z);
+		servertype: UPDATE_PLAYER_POSITION,
+		idn: obj.idn,
+		rotation: Math.atan2(obj.position.x, obj.position.z)
 	};
-	socket.send(obj.senddata);
+	let string = JSON.stringify(obj.senddata);
+	socket.send(string);
   }
   
   let sendinventory = (obj) =>{
 	obj.senddata = {
 		servertype: UPDATE_PLAYER_INVENTORY,
-		id: obj.id,
+		idn: obj.idn,
 		inventory: obj.inventory,
 		gear: obj.gear
 	};
-	socket.send(obj);
+	let string = JSON.stringify(obj.senddata);
+	socket.send(string);
   }
   
   let sendgettargetposition = (obj) =>{
 	obj.senddata = {
 		servertype: UPDATE_ENEMY_TARGETPOSITION,
-		id: obj.id,
+		idn: obj.idn,
 		x: obj.position.x,
 		z: obj.position.z,
 		tx: obj.tx,
 		tz: obj.tz		
 	}; 
-	socket.send(obj);
+	let string = JSON.stringify(obj.senddata);
+	socket.send(string);
   }
